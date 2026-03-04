@@ -14,44 +14,6 @@ let numberTransitionToken = 0;
 
 const DING_AUDIO_PATH = "media/ding.mp3";
 
-function isEdgeOnIOS() {
-  const ua = globalThis.navigator?.userAgent ?? "";
-  return /EdgiOS/i.test(ua) && /iPhone|iPad|iPod/i.test(ua);
-}
-
-function getNumberAudioCandidates(number) {
-  return [
-    `media/Now-Serving-Number-${number}.wav`,
-    `media/Now-Serving-Number-${number}.mp3`,
-    `media/Now-Serving-Number-${number}.m4a`,
-  ];
-}
-
-async function playFirstAvailableAudio(paths) {
-  for (const path of paths) {
-    try {
-      const audio = new Audio(path);
-      await audio.play();
-      return true;
-    } catch {
-    }
-  }
-
-  return false;
-}
-
-function speakNumberFallback(number) {
-  if (!("speechSynthesis" in globalThis)) {
-    return;
-  }
-
-  const utterance = new SpeechSynthesisUtterance(`Now serving ${number}`);
-  utterance.rate = 0.92;
-  utterance.pitch = 1;
-  globalThis.speechSynthesis.cancel();
-  globalThis.speechSynthesis.speak(utterance);
-}
-
 function requestFullscreenOnce() {
   if (fullscreenRequested) {
     return;
@@ -82,12 +44,10 @@ function getAudioPath(number) {
   return `media/Now-Serving-Number-${number}.wav`;
 }
 
-async function playNumberAudio(number) {
-  const audioPlayed = await playFirstAvailableAudio(getNumberAudioCandidates(number));
-
-  if (!audioPlayed) {
-    speakNumberFallback(number);
-  }
+function playNumberAudio(number) {
+  const audio = new Audio(getAudioPath(number));
+  return audio.play().catch(() => {
+  });
 }
 
 function wait(durationMs) {
@@ -97,36 +57,23 @@ function wait(durationMs) {
 }
 
 function playDingAudio() {
-  return playFirstAvailableAudio([DING_AUDIO_PATH, "media/ding.wav"]);
+  const ding = new Audio(DING_AUDIO_PATH);
+  return ding.play().catch(() => {
+  });
 }
 
 async function playCueAndNumberAudio(number) {
   await playDingAudio();
-  await wait(320);
+  await wait(120);
   await playNumberAudio(number);
 }
 
 async function renderNumber(number) {
   numberTransitionToken += 1;
   const currentToken = numberTransitionToken;
-  const edgeIOS = isEdgeOnIOS();
 
   servingNumber.classList.remove("pulse");
   servingNumber.classList.add("is-updating");
-
-  if (edgeIOS) {
-    if (currentToken !== numberTransitionToken) {
-      return;
-    }
-
-    servingNumber.textContent = String(number);
-    servingNumber.classList.remove("is-updating");
-    servingNumber.classList.add("pulse");
-
-    await playNumberAudio(number);
-    return;
-  }
-
   await wait(120);
 
   if (currentToken !== numberTransitionToken) {
