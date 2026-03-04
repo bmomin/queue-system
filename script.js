@@ -14,6 +14,11 @@ let numberTransitionToken = 0;
 
 const DING_AUDIO_PATH = "media/ding.mp3";
 
+function isEdgeOnIOS() {
+  const ua = globalThis.navigator?.userAgent ?? "";
+  return /EdgiOS/i.test(ua) && /iPhone|iPad|iPod/i.test(ua);
+}
+
 function getNumberAudioCandidates(number) {
   return [
     `media/Now-Serving-Number-${number}.wav`,
@@ -104,9 +109,24 @@ async function playCueAndNumberAudio(number) {
 async function renderNumber(number) {
   numberTransitionToken += 1;
   const currentToken = numberTransitionToken;
+  const edgeIOS = isEdgeOnIOS();
 
   servingNumber.classList.remove("pulse");
   servingNumber.classList.add("is-updating");
+
+  if (edgeIOS) {
+    if (currentToken !== numberTransitionToken) {
+      return;
+    }
+
+    servingNumber.textContent = String(number);
+    servingNumber.classList.remove("is-updating");
+    servingNumber.classList.add("pulse");
+
+    await playNumberAudio(number);
+    return;
+  }
+
   await wait(120);
 
   if (currentToken !== numberTransitionToken) {
