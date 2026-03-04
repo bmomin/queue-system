@@ -14,6 +14,39 @@ let numberTransitionToken = 0;
 
 const DING_AUDIO_PATH = "media/ding.mp3";
 
+function getNumberAudioCandidates(number) {
+  return [
+    `media/Now-Serving-Number-${number}.wav`,
+    `media/Now-Serving-Number-${number}.mp3`,
+    `media/Now-Serving-Number-${number}.m4a`,
+  ];
+}
+
+async function playFirstAvailableAudio(paths) {
+  for (const path of paths) {
+    try {
+      const audio = new Audio(path);
+      await audio.play();
+      return true;
+    } catch {
+    }
+  }
+
+  return false;
+}
+
+function speakNumberFallback(number) {
+  if (!("speechSynthesis" in globalThis)) {
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(`Now serving ${number}`);
+  utterance.rate = 0.92;
+  utterance.pitch = 1;
+  globalThis.speechSynthesis.cancel();
+  globalThis.speechSynthesis.speak(utterance);
+}
+
 function requestFullscreenOnce() {
   if (fullscreenRequested) {
     return;
@@ -44,10 +77,12 @@ function getAudioPath(number) {
   return `media/Now-Serving-Number-${number}.wav`;
 }
 
-function playNumberAudio(number) {
-  const audio = new Audio(getAudioPath(number));
-  return audio.play().catch(() => {
-  });
+async function playNumberAudio(number) {
+  const audioPlayed = await playFirstAvailableAudio(getNumberAudioCandidates(number));
+
+  if (!audioPlayed) {
+    speakNumberFallback(number);
+  }
 }
 
 function wait(durationMs) {
@@ -57,14 +92,12 @@ function wait(durationMs) {
 }
 
 function playDingAudio() {
-  const ding = new Audio(DING_AUDIO_PATH);
-  return ding.play().catch(() => {
-  });
+  return playFirstAvailableAudio([DING_AUDIO_PATH, "media/ding.wav"]);
 }
 
 async function playCueAndNumberAudio(number) {
   await playDingAudio();
-  await wait(120);
+  await wait(320);
   await playNumberAudio(number);
 }
 
