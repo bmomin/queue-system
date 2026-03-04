@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Queue System Display</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="screen" id="screen" aria-label="Queue display. Click or press next key to advance.">
+    <section class="view view--landing" id="landingView" aria-live="polite">
+      <div class="landing-card">
+        <img src="logo.png" alt="Logo" class="logo" />
+        <div class="landing-content">
+          <h1 class="landing-title">REGISTRATION CARE DESK</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view--number hidden" id="numberView" aria-live="polite">
+      <p class="label">NOW SERVING</p>
+      <p class="number" id="servingNumber">1</p>
+    </section>
+
+    <div class="top-box hidden" id="topBox" aria-hidden="true">
+      <img src="logo.png" alt="" class="bottom-logo" />
+      <span class="bottom-text">REGISTRATION CARE DESK</span>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
